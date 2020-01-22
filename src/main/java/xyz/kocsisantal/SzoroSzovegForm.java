@@ -1,12 +1,10 @@
 package xyz.kocsisantal;
 
+import xyz.kocsisantal.pdf.Generator;
+
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-import xyz.kocsisantal.pdf.Generator;
 
 public class SzoroSzovegForm {
     public JPanel mainPanel;
@@ -31,7 +29,8 @@ public class SzoroSzovegForm {
 
     private void generatePdf(final String name, final String address, final String date) throws IOException {
         final Generator generator = new Generator(name, address, date);
-        final File file = new File("target/" + name + ".pdf");
+        final File file = new File(name + ".pdf");
         generator.generate(file);
     }
+
 }

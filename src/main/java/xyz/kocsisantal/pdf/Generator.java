@@ -85,7 +85,7 @@ public class Generator {
     }
 
     private OpenTypeFont parseFont(String fileName) throws IOException {
-        return new OTFParser(true).parse(new File(this.getClass().getResource(fileName).getFile()));
+        return new OTFParser(true).parse(this.getClass().getResourceAsStream(fileName));
     }
 
     private float calculateSize(final String text, final PDFont font, float size) throws IOException {
