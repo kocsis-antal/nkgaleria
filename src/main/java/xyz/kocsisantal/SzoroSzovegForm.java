@@ -1,14 +1,12 @@
 package xyz.kocsisantal;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.pdf.PdfWriter;
+import java.io.File;
+import java.io.IOException;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-import javax.swing.*;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import xyz.kocsisantal.pdf.Generator;
 
 public class SzoroSzovegForm {
     public JPanel mainPanel;
@@ -19,42 +17,21 @@ public class SzoroSzovegForm {
 
     public SzoroSzovegForm() {
         buttonGenerate.addActionListener(actionEvent -> {
-            String name = textFieldName.getText();
-            String address = textFieldAddress.getText();
-            String date = textFieldDate.getText();
+            final String name = textFieldName.getText();
+            final String address = textFieldAddress.getText();
+            final String date = textFieldDate.getText();
 
             try {
                 generatePdf(name, address, date);
-            } catch (FileNotFoundException | DocumentException e) {
+            } catch (final IOException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    private static void addMetaData(Document document, String name) {
-        document.addTitle(name);
-        // document.addSubject("Using iText");
-
-        document.addAuthor("Kocsis Antal");
-        document.addCreator("Kocsis Antal");
-    }
-
-    private void generatePdf(String name, String address, String date) throws FileNotFoundException, DocumentException {
-        Document document = new Document();
-        PdfWriter.getInstance(document, new FileOutputStream("target/" + name + ".pdf"));
-        document.open();
-        addMetaData(document, name);
-
-        addLine(document, name);
-        addLine(document, address);
-        addLine(document, date);
-
-        document.close();
-    }
-
-    private void addLine(Document document, String string) throws DocumentException {
-        Paragraph nameParagraph = new Paragraph(string);
-        nameParagraph.setAlignment(Element.ALIGN_CENTER);
-        document.add(nameParagraph);
+    private void generatePdf(final String name, final String address, final String date) throws IOException {
+        final Generator generator = new Generator(name, address, date);
+        final File file = new File("target/" + name + ".pdf");
+        generator.generate(file);
     }
 }
