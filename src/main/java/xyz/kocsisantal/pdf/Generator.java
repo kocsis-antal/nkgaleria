@@ -1,21 +1,28 @@
 package xyz.kocsisantal.pdf;
 
-import org.apache.fontbox.ttf.OTFParser;
-import org.apache.fontbox.ttf.OpenTypeFont;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+
+import static xyz.kocsisantal.pdf.Font.LIBERATION_SERIF;
+import static xyz.kocsisantal.pdf.Font.TYPE.*;
 
 public class Generator {
-    public static final float WIDTH = 420f;
-    public static final String HELYE_STRING = "Helye: ";
-    private static final float BOX_WIDTH = 1134;
+    private static final Log logger = LogFactory.getLog(Generator.class);
+
+    private static final float WIDTH = 420f;
+    private static final float MARGIN = 10f;
+    private static final String HELYE_STRING = "Helye: ";
+    private static final String TEL = "Tel.: 36-1/267-52-62, 36-20/265-25-49, 36-20/9-156-076, 36-20/366-8000";
+
     private final String name;
     private final String address;
     private final String date;
@@ -26,13 +33,13 @@ public class Generator {
         this.date = date;
     }
 
-    public void generate(final File file) throws IOException {
+    public void generate(final File file) throws IOException, NoSuchMethodException, IllegalAccessException, NoSuchFieldException, InstantiationException, InvocationTargetException, ClassNotFoundException {
+        logger.info("Creating new PDF [" + file.getName() + "]");
         // create document
         try (final PDDocument document = new PDDocument()) {
-            final PDType0Font fontNormal = PDType0Font.load(document, parseFont("/ZAPFELLIPTICAL711PFL.OTF"), false);
-            final PDType0Font fontBold = PDType0Font.load(document, parseFont("/ZAPFELLIPTICAL711PFL-BOLD.OTF"), false);
-            final PDType0Font fontItalic = PDType0Font.load(document, parseFont("/ZAPFELLIPTICAL711PFL-ITALIC.OTF"), false);
-            final PDType0Font fontBoldItalic = PDType0Font.load(document, parseFont("/ZAPFELLIPTICAL711PFL-BOLDITALIC.OTF"), false);
+            final PDFont fontNormal = Font.load(LIBERATION_SERIF, document, Regular);
+            final PDFont fontBold = Font.load(LIBERATION_SERIF, document, Bold);
+            final PDFont fontItalic = Font.load(LIBERATION_SERIF, document, Italic);
 
             // create page
             final PDPage currentPage = new PDPage(new PDRectangle(WIDTH, 1133.86f));
@@ -40,13 +47,13 @@ public class Generator {
 
             // start the page stream
             try (final PDPageContentStream contentStream = new PDPageContentStream(document, currentPage)) {
-
-                contentStream.beginText();
+                // first line
                 final float linePointer = 114;
 
                 // name
                 final float nameFontSize = calculateSize(HELYE_STRING + name, fontBold, 14f);
 
+                contentStream.beginText();
                 contentStream.newLineAtOffset(WIDTH / 2 - calculateTextWidth(HELYE_STRING, fontItalic, nameFontSize) / 2 - calculateTextWidth(name, fontBold, nameFontSize) / 2, linePointer);
                 contentStream.setFont(fontItalic, nameFontSize);
                 contentStream.showText(HELYE_STRING);
@@ -73,26 +80,26 @@ public class Generator {
                 contentStream.endText();
 
                 // footer
+                final float telFontSize = 12;
+
                 contentStream.beginText();
-                contentStream.newLineAtOffset(18, 60);
-                contentStream.setFont(fontNormal, 12);
-                contentStream.showText("Tel.: 36-1/267-52-62, 36-20/265-25-49, 36-20/9-156-076, 36-20/366-8000");
+                contentStream.newLineAtOffset(WIDTH / 2 - calculateTextWidth(TEL, fontNormal, telFontSize) / 2, 60);
+                contentStream.setFont(fontNormal, telFontSize);
+                contentStream.showText(TEL);
                 contentStream.endText();
             }
 
+            logger.info("Created new PDF [" + file.getName() + "]");
             document.save(file);
         }
     }
 
-    private OpenTypeFont parseFont(String fileName) throws IOException {
-        return new OTFParser(true).parse(this.getClass().getResourceAsStream(fileName));
-    }
-
     private float calculateSize(final String text, final PDFont font, float size) throws IOException {
-        while (calculateTextWidth(text, font, size) > BOX_WIDTH) {
+        while (calculateTextWidth(text, font, size) > WIDTH - 2 * MARGIN) {
             size -= 0.1f;
         }
 
+        logger.debug("Font size set to [" + size + "] for text: " + text);
         return size;
     }
 
