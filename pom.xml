@@ -6,7 +6,7 @@
 
     <groupId>xyz.kocsisantal</groupId>
     <artifactId>nkgaleria</artifactId>
-    <version>1.1</version>
+    <version>2.0</version>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/commons-logging/commons-logging -->

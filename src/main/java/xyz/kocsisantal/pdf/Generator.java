@@ -25,11 +25,13 @@ public class Generator {
 
     private final String name;
     private final String address;
+    private final String address2;
     private final String date;
 
-    public Generator(final String name, final String address, final String date) {
+    public Generator(final String name, final String address, final String address2, final String date) {
         this.name = name.toUpperCase();
         this.address = address;
+        this.address2 = address2;
         this.date = date;
     }
 
@@ -48,7 +50,7 @@ public class Generator {
             // start the page stream
             try (final PDPageContentStream contentStream = new PDPageContentStream(document, currentPage)) {
                 // first line
-                final float linePointer = 114;
+                float linePointer = 114f;
 
                 // name
                 final float nameFontSize = calculateSize(HELYE_STRING + name, fontBold, 14f);
@@ -61,37 +63,38 @@ public class Generator {
                 contentStream.showText(name);
                 contentStream.endText();
 
-                // address
-                final float addressFontSize = calculateSize(address, fontNormal, 12.5f);
+                final float rowSize = address2 != null ? 13.0f : 17.5f;
+                final float fontSize = address2 != null ? 10.5f : 12.5f;
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(WIDTH / 2 - calculateTextWidth(address, fontNormal, addressFontSize) / 2, linePointer - 17.5f);
-                contentStream.setFont(fontNormal, addressFontSize);
-                contentStream.showText(address);
-                contentStream.endText();
+                // address
+                linePointer -= rowSize;
+                writeText(contentStream, linePointer, fontNormal, fontSize, address);
+                if (address2 != null) {
+                    linePointer -= rowSize;
+                    writeText(contentStream, linePointer, fontNormal, fontSize, address2);
+                }
 
                 // date
-                final float dateFontSize = calculateSize(date, fontNormal, 12.5f);
-
-                contentStream.beginText();
-                contentStream.newLineAtOffset(WIDTH / 2 - calculateTextWidth(date, fontNormal, dateFontSize) / 2, linePointer - 17.5f * 2);
-                contentStream.setFont(fontNormal, dateFontSize);
-                contentStream.showText(date);
-                contentStream.endText();
+                linePointer -= rowSize;
+                writeText(contentStream, linePointer, fontNormal, fontSize, date);
 
                 // footer
-                final float telFontSize = 12;
-
-                contentStream.beginText();
-                contentStream.newLineAtOffset(WIDTH / 2 - calculateTextWidth(TEL, fontNormal, telFontSize) / 2, 60);
-                contentStream.setFont(fontNormal, telFontSize);
-                contentStream.showText(TEL);
-                contentStream.endText();
+                writeText(contentStream, 60f, fontNormal, 12, TEL);
             }
 
             logger.info("Created new PDF [" + file.getName() + "]");
             document.save(file);
         }
+    }
+
+    private void writeText(PDPageContentStream contentStream, float linePointer, PDFont fontNormal, float fontSizeBase, String text) throws IOException {
+        final float fontSize = calculateSize(text, fontNormal, fontSizeBase);
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(WIDTH / 2 - calculateTextWidth(text, fontNormal, fontSize) / 2, linePointer);
+        contentStream.setFont(fontNormal, fontSize);
+        contentStream.showText(text);
+        contentStream.endText();
     }
 
     private float calculateSize(final String text, final PDFont font, float size) throws IOException {
